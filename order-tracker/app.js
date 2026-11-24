@@ -3,19 +3,16 @@ class OrderHistoryStack {
         this.items = [];
     }
 
-    add(order) {
+    push(order) {
         this.items.push(order);
     }
 
-    remove() {
+    pop() {
         return this.items.pop();
     }
 
-    preview() {
-        const index = this.items.length - 1;
-        console.log('index', index);
-        return this.items[index];
-        // return this.items[this.items.length - 1]
+    peek() {
+        return this.items[this.items.length - 1];
     }
 
     size() {
@@ -29,49 +26,38 @@ class OrderHistoryStack {
 
 class OrderQueue {
     constructor(capacity) {
-       //precondition: capacity must be a positive integer
-        if (capacity <= 0 || !Number.isInteger(capacity)) {
-           throw new Error('Capacity must be a positive integer');
-       }
-
-       //postcondition: capacity is set and items array is initialized
-      this.capacity = capacity;
-      this.items = new Array(capacity);
-      this.head = 0;
-      this.tail = 0;
-      this.count = 0;
+        if (!Number.isInteger(capacity) || capacity <= 0) {
+            throw new Error("Capacity must be a positive integer.");
+        }
+        this.capacity = capacity;
+        this.items = new Array(capacity);
+        this.head = 0;
+        this.tail = 0;
+        this.count = 0;
     }
 
-    add(order) {
-        //precondition: queue must not be full
+    enqueue(order) {
         if (this.isFull()) {
-            throw new Error('Queue is full');
+            throw new Error("Queue is full.");
         }
-
-        //postcondition: order is added to the queue
         this.items[this.tail] = order;
-        //update tail and count
-        const nextTail = (this.tail + 1) % this.capacity;
-        console.log('nextTail', nextTail);
-        this.tail = nextTail;
+        this.tail = (this.tail + 1) % this.capacity;
         this.count++;
     }
 
-
-    remove() {
-        //precondition: queue must not be empty
+    dequeue() {
         if (this.isEmpty()) {
-            throw new Error('Queue is empty');
+            return undefined;
         }
-
-        //postcondition: order is removed from the queue
         const order = this.items[this.head];
-        this.items[this.head] = undefined; // optional: clear the slot
-        const nextHead = (this.head + 1) % this.capacity;
-        console.log('nextHead', nextHead);
-        this.head = nextHead;
+        this.items[this.head] = undefined;
+        this.head = (this.head + 1) % this.capacity;
         this.count--;
         return order;
+    }
+
+    front() {
+        return this.isEmpty() ? undefined : this.items[this.head];
     }
 
     size() {
@@ -87,15 +73,33 @@ class OrderQueue {
     }
 }
 
-const orderHistory = new OrderHistoryStack();
-console.log('orderHistory', orderHistory);
-console.log('orderHistory size', orderHistory.size());
-console.log('orderHistory is empty', orderHistory.isEmpty());
-console.log('orderHistory preview', orderHistory.preview());
+const order1 = { orderNumber: 1001, customer: "Jordan", item: "Keyboard" };
+const order2 = { orderNumber: 1002, customer: "Avery", item: "Mouse" };
+const order3 = { orderNumber: 1003, customer: "Taylor", item: "Monitor" };
+const order4 = { orderNumber: 1004, customer: "Morgan", item: "USB Cable" };
 
+const queue = new OrderQueue(3);
+const history = new OrderHistoryStack();
 
-const orderQueue = new OrderQueue(3);
-console.log('orderQueue', orderQueue);
-console.log('orderQueue size', orderQueue.size());
-console.log('orderQueue is empty', orderQueue.isEmpty());
-console.log('orderQueue is full', orderQueue.isFull());
+queue.enqueue(order1);
+queue.enqueue(order2);
+queue.enqueue(order3);
+console.log("Queue full?", queue.isFull());
+console.log("Next order to process:", queue.front());
+
+// Process one order, then add another to show the tail wrapping around.
+history.push(queue.dequeue());
+queue.enqueue(order4);
+
+while (!queue.isEmpty()) {
+    const order = queue.dequeue();
+    console.log(`Packed order #${order.orderNumber} for ${order.customer} (${order.item})`);
+    history.push(order);
+}
+
+console.log("Packed orders in history:", history.size());
+console.log("Most recently packed:", history.peek());
+console.log("Undo last pack:", history.pop());
+console.log("History size after undo:", history.size());
+
+module.exports = { OrderHistoryStack, OrderQueue };
